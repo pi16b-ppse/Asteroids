@@ -40,10 +40,12 @@ setInterval(update, 1000 / FPS);
 function createAsteroids() {
     asteroids = [];
     var x, y;
+    // создание массива из астероидов
     for (var i = 0; i < ASTEROIDS_NUM; i++) {
         do {
             x = Math.floor(Math.random() * canvas.width);
             y = Math.floor(Math.random() * canvas.height);
+			// буфферная зона
         } while (distBetweenPoints(ship.x, ship.y, x, y) < ASTEROIDS_SIZE * 2 + ship.r);
         asteroids.push(newAsteroid(x, y))
     }
@@ -187,6 +189,7 @@ function update() {
         context.closePath();
         context.stroke();
 
+		// будет в другой ветке
         // движение астероида
 
         // соприкосновение с краем экрана
