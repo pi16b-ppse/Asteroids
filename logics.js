@@ -1,5 +1,7 @@
 const FPS = 30; // кадров в секунду
+const FRICTION = 0.7; // коэффициент трения пространства
 const SHIP_SIZE = 30; // высота корабля в пикселях 
+const SHIP_THRUST = 5; // ускорение корабля пикселей в секунду
 const TURN_SPEED = 360; // скорость поворота градусов в секунду
 
 var canvas = document.getElementById("gameCanvas"); // ссылка на элемент по его ID
@@ -10,7 +12,12 @@ var ship = {
     y: canvas.height / 2,
     r: SHIP_SIZE / 2,
     a: 90 / 180 * Math.PI, // конвертируем в радианы
-    rot: 0
+    rot: 0,
+    thrusting: false,
+    thrust: {
+        x: 0,
+        y: 0
+    }
 }
 
 // установка событий
@@ -26,7 +33,7 @@ function keyDown(/** @type {KeyboardEvent} */ ev) {
             ship.rot = TURN_SPEED / 180 * Math.PI / FPS;
             break;
         case 38: // стрелка вверх (движение вперед)
-
+            ship.thrusting = true;
             break;
         case 39: // правая стрелка (поворот корабля вправо)
             ship.rot = -TURN_SPEED / 180 * Math.PI / FPS;
@@ -40,7 +47,7 @@ function keyUp(/** @type {KeyboardEvent} */ ev) {
             ship.rot = 0;
             break;
         case 38: // стрелка вверх (остановка движения вперед)
-
+            ship.thrusting = false;
             break;
         case 39: // правая стрелка (остановка поворота корабля вправо)
             ship.rot = 0;
@@ -52,6 +59,12 @@ function update() {
     // рисуем космос
     context.fillStyle = "black";
     context.fillRect(0, 0, canvas.width, canvas.height);
+
+    //тяга корабля
+    if(ship.thrusting) {
+        ship.thrust.x += SHIP_THRUST * Math.cos(ship.a) / FPS;
+        ship.thrust.y -= SHIP_THRUST * Math.sin(ship.a) / FPS;
+    }
 
     // рисуем треугольный корабль
     context.strokeStyle = "white";
@@ -76,6 +89,8 @@ function update() {
     ship.a += ship.rot
 
     // движение корабля
+    ship.x += ship.thrust.x;
+    ship.y += ship.thrust.y;
 
     //центральная точка
     context.fillStyle = "red";
