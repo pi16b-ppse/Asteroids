@@ -195,6 +195,14 @@ function update() {
         // соприкосновение с краем экрана
 
     }
+	
+	// проверка на столкновения
+    for (var i = 0; i < asteroids.length; i++) {
+        if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < ship.r + asteroids[i].r) {
+            explodeShip();
+        }
+    }
+	
     // поворот корабля
     ship.a += ship.rot
 
