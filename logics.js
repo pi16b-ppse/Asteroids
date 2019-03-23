@@ -47,7 +47,7 @@ function createAsteroids() {
         do {
             x = Math.floor(Math.random() * canvas.width);
             y = Math.floor(Math.random() * canvas.height);
-			// буфферная зона
+            // буфферная зона
         } while (distBetweenPoints(ship.x, ship.y, x, y) < ASTEROIDS_SIZE * 2 + ship.r);
         asteroids.push(newAsteroid(x, y))
     }
@@ -74,7 +74,6 @@ function newAsteroid(x, y) {
     for (var i = 0; i < asteroid.vertex; i++) {
         asteroid.offset.push(Math.random() * ASTEROIDS_JAG * 2 + 1 - ASTEROIDS_JAG);
     }
-
     return asteroid;
 }
 
@@ -204,35 +203,23 @@ function update() {
             context.arc(x, y, r, 0, Math.PI * 2, false);
             context.stroke();
         }
-
-        // движение астероида
-        asteroids[i].x += asteroids[i].xV;
-        asteroids[i].y += asteroids[i].yV;
-
-        // соприкосновение с краем экрана
-        if (asteroids[i].x < 0 - asteroids[i].r) {
-            asteroids[i].x = canvas.width + asteroids[i].r;
-        } else if (asteroids[i].x > canvas.width + asteroids[i].r) {
-            asteroids[i].x = 0 - asteroids[i].r
-        }
-
-        if (asteroids[i].y < 0 - asteroids[i].r) {
-            asteroids[i].y = canvas.height + asteroids[i].r;
-        } else if (asteroids[i].y > canvas.height + asteroids[i].r) {
-            asteroids[i].y = 0 - asteroids[i].r
-        }
-
     }
-	
-    // поворот корабля
-    ship.a += ship.rot
-	
-	// проверка на столкновения
+
+    //центральная точка
+    if (SHOW_CENTER_DOT) {
+        context.fillStyle = "red";
+        context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
+    }
+
+    // проверка на столкновения
     for (var i = 0; i < asteroids.length; i++) {
         if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < ship.r + asteroids[i].r) {
             explodeShip();
         }
     }
+
+    // поворот корабля
+    ship.a += ship.rot;
 
     // движение корабля
     ship.x += ship.thrust.x;
@@ -250,8 +237,8 @@ function update() {
     } else if (ship.y > canvas.height + ship.r) {
         ship.y = 0 + ship.r;
     }
-	
-		// вынес движени астероидов для дальнейшего развития столкновения
+
+    // вынес движени астероидов для дальнейшего развития столкновения
     for (var i = 0; i < asteroids.length; i++) {
         // движение астероида
         asteroids[i].x += asteroids[i].xV;
@@ -270,11 +257,4 @@ function update() {
             asteroids[i].y = 0 - asteroids[i].r
         }
     }
-
-    //центральная точка
-    if (SHOW_CENTER_DOT) {
-        context.fillStyle = "red";
-        context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
-    }
-
 }
