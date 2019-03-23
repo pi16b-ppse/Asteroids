@@ -1,5 +1,8 @@
 const FPS = 40; // кадров в секунду
 const FRICTION = 0.7; // коэффициент трения пространства
+const ASTEROIDS_NUM = 3; // стартовое количество астероидов
+const ASTEROIDS_SPEED = 50; //максимальная стартовая скорость астероидов пикселей в секунду
+const ASTEROIDS_SIZE = 100; // стартовый размер астероидов в пикселях
 const SHIP_SIZE = 30; // высота корабля в пикселях 
 const SHIP_THRUST = 5; // ускорение корабля пикселей в секунду
 const TURN_SPEED = 360; // скорость поворота градусов в секунду
@@ -20,12 +23,40 @@ var ship = {
     }
 }
 
+//Астероиды
+var asteroids = [];
+createAsteroids();
+
 // установка событий
 document.addEventListener("keydown", keyDown);
 document.addEventListener("keyup", keyUp);
 
 // установка игрового цикла
 setInterval(update, 1000 / FPS);
+
+// заполнение массива с астероидами
+function createAsteroids() {
+    asteroids = [];
+    var x, y;
+    for (var i = 0; i < ASTEROIDS_NUM; i++) {
+        x = Math.floor(Math.random() * canvas.width);
+        y = Math.floor(Math.random() * canvas.height);
+        asteroids.push(newAsteroid(x, y))
+    }
+}
+
+// создание одного астероида
+function newAsteroid(x, y) {
+    var asteroid = {
+        x: x,
+        y: y,
+        xV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
+        yV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
+        r: ASTEROIDS_SIZE / 2,
+        a: Math.random() * Math.PI * 2 // в радианах
+    };
+    return asteroid;
+}
 
 function keyDown(/** @type {KeyboardEvent} */ ev) {
     switch (ev.keyCode) {
@@ -109,6 +140,8 @@ function update() {
     );
     context.closePath();
     context.stroke();
+
+    // рисуем астероиды
 
     // поворот корабля
     ship.a += ship.rot
