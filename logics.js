@@ -8,6 +8,8 @@ const ASTEROIDS_VERTEX = 10; // среднее количество вершин
 const SHIP_SIZE = 30; // высота корабля в пикселях 
 const SHIP_THRUST = 5; // ускорение корабля пикселей в секунду
 const TURN_SPEED = 360; // скорость поворота градусов в секунду
+const SHOW_CENTER_DOT = false; // показать центральную точку
+const SHOW_BOUNDING = true;// показать ограничение столкновения
 
 var canvas = document.getElementById("gameCanvas"); // ссылка на элемент по его ID
 var context = canvas.getContext("2d"); // контекст рисования на холсте
@@ -139,7 +141,7 @@ function update() {
     }
 
     // рисуем треугольный корабль
-    context.strokeStyle = "white";
+    context.strokeStyle = "lime";
     context.lineWidth = SHIP_SIZE / 20;
     context.beginPath();
     context.moveTo( // кончик корабля
@@ -157,11 +159,18 @@ function update() {
     context.closePath();
     context.stroke();
 
+    if (SHOW_BOUNDING) {
+        context.strokeStyle = "white";
+        context.beginPath();
+        context.arc(ship.x, ship.y, ship.r, 0, Math.PI * 2, false);
+        context.stroke();
+    }
+
     // рисуем астероиды
-    context.strokeStyle = "slategrey";
-    context.lineWidth = SHIP_SIZE / 20;
     var x, y, r, a, vertex, offset;
     for (var i = 0; i < asteroids.length; i++) {
+        context.strokeStyle = "slategrey";
+        context.lineWidth = SHIP_SIZE / 20;
         // свойства астероида
         x = asteroids[i].x;
         y = asteroids[i].y;
@@ -187,9 +196,29 @@ function update() {
         context.closePath();
         context.stroke();
 
+        if (SHOW_BOUNDING) {
+            context.strokeStyle = "white";
+            context.beginPath();
+            context.arc(x, y, r, 0, Math.PI * 2, false);
+            context.stroke();
+        }
+
         // движение астероида
+        asteroids[i].x += asteroids[i].xV;
+        asteroids[i].y += asteroids[i].yV;
 
         // соприкосновение с краем экрана
+        if (asteroids[i].x < 0 - asteroids[i].r) {
+            asteroids[i].x = canvas.width + asteroids[i].r;
+        } else if (asteroids[i].x > canvas.width + asteroids[i].r) {
+            asteroids[i].x = 0 - asteroids[i].r
+        }
+
+        if (asteroids[i].y < 0 - asteroids[i].r) {
+            asteroids[i].y = canvas.height + asteroids[i].r;
+        } else if (asteroids[i].y > canvas.height + asteroids[i].r) {
+            asteroids[i].y = 0 - asteroids[i].r
+        }
 
     }
     // поворот корабля
@@ -213,7 +242,9 @@ function update() {
     }
 
     //центральная точка
-    context.fillStyle = "red";
-    //context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
+    if (SHOW_CENTER_DOT) {
+        context.fillStyle = "red";
+        context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
+    }
 
 }
