@@ -64,6 +64,9 @@ function update() {
     if(ship.thrusting) {
         ship.thrust.x += SHIP_THRUST * Math.cos(ship.a) / FPS;
         ship.thrust.y -= SHIP_THRUST * Math.sin(ship.a) / FPS;
+    } else {
+        ship.thrust.x -= FRICTION * ship.thrust.x / FPS;
+        ship.thrust.y -= FRICTION * ship.thrust.y / FPS;
     }
 
     // рисуем треугольный корабль
