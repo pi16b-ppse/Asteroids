@@ -141,7 +141,7 @@ function update() {
     }
 
     // рисуем треугольный корабль
-    context.strokeStyle = "white";
+    context.strokeStyle = "lime";
     context.lineWidth = SHIP_SIZE / 20;
     context.beginPath();
     context.moveTo( // кончик корабля
@@ -160,10 +160,10 @@ function update() {
     context.stroke();
 
     // рисуем астероиды
-    context.strokeStyle = "slategrey";
-    context.lineWidth = SHIP_SIZE / 20;
     var x, y, r, a, vertex, offset;
     for (var i = 0; i < asteroids.length; i++) {
+        context.strokeStyle = "slategrey";
+        context.lineWidth = SHIP_SIZE / 20;
         // свойства астероида
         x = asteroids[i].x;
         y = asteroids[i].y;
@@ -189,12 +189,21 @@ function update() {
         context.closePath();
         context.stroke();
 
-		// будет в другой ветке
+        if (SHOW_BOUNDING) {
+            context.strokeStyle = "white";
+            context.beginPath();
+            context.arc(x, y, r, 0, Math.PI * 2, false);
+            context.stroke();
+        }
+
         // движение астероида
 
         // соприкосновение с краем экрана
 
     }
+	
+    // поворот корабля
+    ship.a += ship.rot
 	
 	// проверка на столкновения
     for (var i = 0; i < asteroids.length; i++) {
@@ -202,9 +211,6 @@ function update() {
             explodeShip();
         }
     }
-	
-    // поворот корабля
-    ship.a += ship.rot
 
     // движение корабля
     ship.x += ship.thrust.x;
@@ -222,9 +228,31 @@ function update() {
     } else if (ship.y > canvas.height + ship.r) {
         ship.y = 0 + ship.r;
     }
+	
+		// вынес движени астероидов для дальнейшего развития столкновения
+    for (var i = 0; i < asteroids.length; i++) {
+        // движение астероида
+        asteroids[i].x += asteroids[i].xV;
+        asteroids[i].y += asteroids[i].yV;
+
+        // соприкосновение с краем экрана
+        if (asteroids[i].x < 0 - asteroids[i].r) {
+            asteroids[i].x = canvas.width + asteroids[i].r;
+        } else if (asteroids[i].x > canvas.width + asteroids[i].r) {
+            asteroids[i].x = 0 - asteroids[i].r
+        }
+
+        if (asteroids[i].y < 0 - asteroids[i].r) {
+            asteroids[i].y = canvas.height + asteroids[i].r;
+        } else if (asteroids[i].y > canvas.height + asteroids[i].r) {
+            asteroids[i].y = 0 - asteroids[i].r
+        }
+    }
 
     //центральная точка
-    context.fillStyle = "red";
-    //context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
+    if (SHOW_CENTER_DOT) {
+        context.fillStyle = "red";
+        context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
+    }
 
 }
