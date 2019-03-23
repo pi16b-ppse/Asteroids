@@ -3,6 +3,7 @@ const FRICTION = 0.7; // коэффициент трения пространс�
 const ASTEROIDS_NUM = 3; // стартовое количество астероидов
 const ASTEROIDS_SPEED = 50; //максимальная стартовая скорость астероидов пикселей в секунду
 const ASTEROIDS_SIZE = 100; // стартовый размер астероидов в пикселях
+const ASTEROIDS_VERTEX = 10; // среднее количество вершин астероидов
 const SHIP_SIZE = 30; // высота корабля в пикселях 
 const SHIP_THRUST = 5; // ускорение корабля пикселей в секунду
 const TURN_SPEED = 360; // скорость поворота градусов в секунду
@@ -53,7 +54,8 @@ function newAsteroid(x, y) {
         xV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
         yV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
         r: ASTEROIDS_SIZE / 2,
-        a: Math.random() * Math.PI * 2 // в радианах
+        a: Math.random() * Math.PI * 2, // в радианах
+        vertex: Math.floor(Math.random() * (ASTEROIDS_VERTEX + 1) + ASTEROIDS_VERTEX / 2)
     };
     return asteroid;
 }
@@ -142,7 +144,39 @@ function update() {
     context.stroke();
 
     // рисуем астероиды
+    context.strokeStyle = "slategrey";
+    context.lineWidth = SHIP_SIZE / 20;
+    var x, y, r, a, vertex;
+    for (var i = 0; i < asteroids.length; i++) {
+        // свойства астероида
+        x = asteroids[i].x;
+        y = asteroids[i].y;
+        r = asteroids[i].r;
+        a = asteroids[i].a;
+        vertex = asteroids[i].vertex;
 
+        // рисуем путь
+        context.beginPath();
+        context.moveTo(
+            x + r * Math.cos(a),
+            y + r * Math.sin(a)
+        );
+
+        // рисуем многоугольник
+        for (var j = 0; j < vertex; j++) {
+            context.lineTo(
+                x + r * Math.cos(a + j * Math.PI * 2 / vertex),
+                y + r * Math.sin(a + j * Math.PI * 2 / vertex)
+            )
+        }
+        context.closePath();
+        context.stroke();
+
+        // движение астероида
+
+        // соприкосновение с краем экрана
+
+    }
     // поворот корабля
     ship.a += ship.rot
 
@@ -150,7 +184,7 @@ function update() {
     ship.x += ship.thrust.x;
     ship.y += ship.thrust.y;
 
-    //Соприкосновение с краем экрана
+    // соприкосновение с краем экрана
     if (ship.x < 0 - ship.r) {
         ship.x = canvas.width + ship.r;
     } else if (ship.x > canvas.width + ship.r) {
