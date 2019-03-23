@@ -64,13 +64,35 @@ function update() {
     if (ship.thrusting) {
         ship.thrust.x += SHIP_THRUST * Math.cos(ship.a) / FPS;
         ship.thrust.y -= SHIP_THRUST * Math.sin(ship.a) / FPS;
+
+        //рисуем след от двигателя
+        context.fillStyle = "aqua";
+        context.strokeStyle = "blue";
+        context.lineWidth = SHIP_SIZE / 10;
+        context.beginPath();
+        context.moveTo( // левый край
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + 0.5 * Math.sin(ship.a)),
+            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - 0.5 * Math.cos(ship.a))
+        );
+        context.lineTo( // центр
+            ship.x - ship.r * 5 / 3 * Math.cos(ship.a),
+            ship.y + ship.r * 5 / 3 * Math.sin(ship.a)
+        );
+        context.lineTo( // правый край
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - 0.5 * Math.sin(ship.a)),
+            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + 0.5 * Math.cos(ship.a))
+        );
+        context.closePath();
+        context.fill();
+        context.stroke();
+
     } else {
         ship.thrust.x -= FRICTION * ship.thrust.x / FPS;
         ship.thrust.y -= FRICTION * ship.thrust.y / FPS;
     }
 
     // рисуем треугольный корабль
-    context.strokeStyle = "yellow";
+    context.strokeStyle = "white";
     context.lineWidth = SHIP_SIZE / 20;
     context.beginPath();
     context.moveTo( // кончик корабля
@@ -110,6 +132,6 @@ function update() {
 
     //центральная точка
     context.fillStyle = "red";
-    context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
+    //context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
 
 }
