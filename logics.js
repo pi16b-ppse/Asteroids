@@ -42,10 +42,12 @@ setInterval(update, 1000 / FPS);
 function createAsteroids() {
     asteroids = [];
     var x, y;
+    // создание массива из астероидов
     for (var i = 0; i < ASTEROIDS_NUM; i++) {
         do {
             x = Math.floor(Math.random() * canvas.width);
             y = Math.floor(Math.random() * canvas.height);
+			// буфферная зона
         } while (distBetweenPoints(ship.x, ship.y, x, y) < ASTEROIDS_SIZE * 2 + ship.r);
         asteroids.push(newAsteroid(x, y))
     }
@@ -221,8 +223,16 @@ function update() {
         }
 
     }
+	
     // поворот корабля
     ship.a += ship.rot
+	
+	// проверка на столкновения
+    for (var i = 0; i < asteroids.length; i++) {
+        if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < ship.r + asteroids[i].r) {
+            explodeShip();
+        }
+    }
 
     // движение корабля
     ship.x += ship.thrust.x;
@@ -239,6 +249,26 @@ function update() {
         ship.y = canvas.height + ship.r;
     } else if (ship.y > canvas.height + ship.r) {
         ship.y = 0 + ship.r;
+    }
+	
+		// вынес движени астероидов для дальнейшего развития столкновения
+    for (var i = 0; i < asteroids.length; i++) {
+        // движение астероида
+        asteroids[i].x += asteroids[i].xV;
+        asteroids[i].y += asteroids[i].yV;
+
+        // соприкосновение с краем экрана
+        if (asteroids[i].x < 0 - asteroids[i].r) {
+            asteroids[i].x = canvas.width + asteroids[i].r;
+        } else if (asteroids[i].x > canvas.width + asteroids[i].r) {
+            asteroids[i].x = 0 - asteroids[i].r
+        }
+
+        if (asteroids[i].y < 0 - asteroids[i].r) {
+            asteroids[i].y = canvas.height + asteroids[i].r;
+        } else if (asteroids[i].y > canvas.height + asteroids[i].r) {
+            asteroids[i].y = 0 - asteroids[i].r
+        }
     }
 
     //центральная точка
