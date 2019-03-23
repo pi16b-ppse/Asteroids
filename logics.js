@@ -1,4 +1,4 @@
-const FPS = 30; // кадров в секунду
+const FPS = 40; // кадров в секунду
 const FRICTION = 0.7; // коэффициент трения пространства
 const SHIP_SIZE = 30; // высота корабля в пикселях 
 const SHIP_THRUST = 5; // ускорение корабля пикселей в секунду
@@ -70,7 +70,7 @@ function update() {
     }
 
     // рисуем треугольный корабль
-    context.strokeStyle = "white";
+    context.strokeStyle = "yellow";
     context.lineWidth = SHIP_SIZE / 20;
     context.beginPath();
     context.moveTo( // кончик корабля
@@ -81,7 +81,7 @@ function update() {
         ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),
         ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
     );
-    context.lineTo( // корма
+    context.lineTo( // корма справа
         ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),
         ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
     );
