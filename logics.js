@@ -1,6 +1,7 @@
 const FPS = 40; // кадров в секунду
 const FRICTION = 0.7; // коэффициент трения пространства
 const ASTEROIDS_NUM = 3; // стартовое количество астероидов
+const ASTEROIDS_JAG = 0.4; // острота астероидов
 const ASTEROIDS_SPEED = 50; //максимальная стартовая скорость астероидов пикселей в секунду
 const ASTEROIDS_SIZE = 100; // стартовый размер астероидов в пикселях
 const ASTEROIDS_VERTEX = 10; // среднее количество вершин астероидов
@@ -61,8 +62,15 @@ function newAsteroid(x, y) {
         yV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
         r: ASTEROIDS_SIZE / 2,
         a: Math.random() * Math.PI * 2, // в радианах
-        vertex: Math.floor(Math.random() * (ASTEROIDS_VERTEX + 1) + ASTEROIDS_VERTEX / 2)
+        vertex: Math.floor(Math.random() * (ASTEROIDS_VERTEX + 1) + ASTEROIDS_VERTEX / 2),
+        offset: []
     };
+
+    // смещение вершин
+    for (var i = 0; i < asteroid.vertex; i++) {
+        asteroid.offset.push(Math.random() * ASTEROIDS_JAG * 2 + 1 - ASTEROIDS_JAG);
+    }
+
     return asteroid;
 }
 
@@ -152,7 +160,7 @@ function update() {
     // рисуем астероиды
     context.strokeStyle = "slategrey";
     context.lineWidth = SHIP_SIZE / 20;
-    var x, y, r, a, vertex;
+    var x, y, r, a, vertex, offset;
     for (var i = 0; i < asteroids.length; i++) {
         // свойства астероида
         x = asteroids[i].x;
@@ -160,19 +168,20 @@ function update() {
         r = asteroids[i].r;
         a = asteroids[i].a;
         vertex = asteroids[i].vertex;
+        offset = asteroids[i].offset;
 
         // рисуем путь
         context.beginPath();
         context.moveTo(
-            x + r * Math.cos(a),
-            y + r * Math.sin(a)
+            x + r * offset[0] * Math.cos(a),
+            y + r * offset[0] * Math.sin(a)
         );
 
         // рисуем многоугольник
-        for (var j = 0; j < vertex; j++) {
+        for (var j = 1; j < vertex; j++) {
             context.lineTo(
-                x + r * Math.cos(a + j * Math.PI * 2 / vertex),
-                y + r * Math.sin(a + j * Math.PI * 2 / vertex)
+                x + r * offset[j] * Math.cos(a + j * Math.PI * 2 / vertex),
+                y + r * offset[j] * Math.sin(a + j * Math.PI * 2 / vertex)
             )
         }
         context.closePath();
