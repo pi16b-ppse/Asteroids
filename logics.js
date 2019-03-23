@@ -28,7 +28,7 @@ document.addEventListener("keyup", keyUp);
 setInterval(update, 1000 / FPS);
 
 function keyDown(/** @type {KeyboardEvent} */ ev) {
-    switch(ev.keyCode) {
+    switch (ev.keyCode) {
         case 37: // левая стрелка (поворот корабля влево)
             ship.rot = TURN_SPEED / 180 * Math.PI / FPS;
             break;
@@ -42,7 +42,7 @@ function keyDown(/** @type {KeyboardEvent} */ ev) {
 }
 
 function keyUp(/** @type {KeyboardEvent} */ ev) {
-    switch(ev.keyCode) {
+    switch (ev.keyCode) {
         case 37: // левая стрелка (остановка поворота корабля влево)
             ship.rot = 0;
             break;
@@ -61,7 +61,7 @@ function update() {
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     //тяга корабля
-    if(ship.thrusting) {
+    if (ship.thrusting) {
         ship.thrust.x += SHIP_THRUST * Math.cos(ship.a) / FPS;
         ship.thrust.y -= SHIP_THRUST * Math.sin(ship.a) / FPS;
     } else {
@@ -94,6 +94,19 @@ function update() {
     // движение корабля
     ship.x += ship.thrust.x;
     ship.y += ship.thrust.y;
+
+    //Соприкосновение с краем экрана
+    if (ship.x < 0 - ship.r) {
+        ship.x = canvas.width + ship.r;
+    } else if (ship.x > canvas.width + ship.r) {
+        ship.x = 0 + ship.r;
+    }
+
+    if (ship.y < 0 - ship.r) {
+        ship.y = canvas.height + ship.r;
+    } else if (ship.y > canvas.height + ship.r) {
+        ship.y = 0 + ship.r;
+    }
 
     //центральная точка
     context.fillStyle = "red";
