@@ -188,6 +188,8 @@ function update() {
         context.stroke();
 
         // движение астероида
+        asteroids[i].x += asteroids[i].xV;
+        asteroids[i].y += asteroids[i].yV;
 
         // соприкосновение с краем экрана
 
