@@ -57,6 +57,11 @@ function distBetweenPoints(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 }
 
+function explodeShip() {
+    // Доработать
+    var explodeTime = Math.ceil(FPS * 0.25);
+}
+
 // создание одного астероида
 function newAsteroid(x, y) {
     var asteroid = {
