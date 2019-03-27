@@ -9,7 +9,8 @@ const SHIP_SIZE = 30; // высота корабля в пикселях
 const SHIP_THRUST = 5; // ускорение корабля пикселей в секунду
 const TURN_SPEED = 360; // скорость поворота градусов в секунду
 const SHOW_CENTER_DOT = false; // показать центральную точку
-const SHOW_BOUNDING = true;// показать ограничение столкновения
+const SHOW_BOUNDING = true; // показать ограничение столкновения
+const SHIP_EXPLODE_DURATION = 0.3; //длительность взрыва корабля в секундах
 
 var canvas = document.getElementById("gameCanvas"); // ссылка на элемент по его ID
 var context = canvas.getContext("2d"); // контекст рисования на холсте
@@ -57,6 +58,10 @@ function distBetweenPoints(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 }
 
+function explodeShip() {
+    ship.explodeTime = Math.ceil(FPS * SHIP_EXPLODE_DURATION);
+}
+
 // создание одного астероида
 function newAsteroid(x, y) {
     var asteroid = {
@@ -65,6 +70,7 @@ function newAsteroid(x, y) {
         xV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
         yV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
         r: ASTEROIDS_SIZE / 2,
+        explodeTime: 0,
         a: Math.random() * Math.PI * 2, // в радианах
         vertex: Math.floor(Math.random() * (ASTEROIDS_VERTEX + 1) + ASTEROIDS_VERTEX / 2),
         offset: []
