@@ -9,24 +9,13 @@ const SHIP_SIZE = 30; // высота корабля в пикселях
 const SHIP_THRUST = 5; // ускорение корабля пикселей в секунду
 const TURN_SPEED = 360; // скорость поворота градусов в секунду
 const SHOW_CENTER_DOT = false; // показать центральную точку
-const SHOW_BOUNDING = true; // показать ограничение столкновения
+const SHOW_BOUNDING = false; // показать ограничение столкновения
 const SHIP_EXPLODE_DURATION = 0.3; //длительность взрыва корабля в секундах
 
 var canvas = document.getElementById("gameCanvas"); // ссылка на элемент по его ID
 var context = canvas.getContext("2d"); // контекст рисования на холсте
 
-var ship = {
-    x: canvas.width / 2,
-    y: canvas.height / 2,
-    r: SHIP_SIZE / 2,
-    a: 90 / 180 * Math.PI, // конвертируем в радианы
-    rot: 0,
-    thrusting: false,
-    thrust: {
-        x: 0,
-        y: 0
-    }
-}
+var ship = newShip();
 
 //Астероиды
 var asteroids = [];
@@ -83,6 +72,22 @@ function newAsteroid(x, y) {
     return asteroid;
 }
 
+function newShip() {
+    return {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        r: SHIP_SIZE / 2,
+        a: 90 / 180 * Math.PI, // конвертируем в радианы
+        explodeTime: 0,
+        rot: 0,
+        thrusting: false,
+        thrust: {
+            x: 0,
+            y: 0
+        }
+    }
+}
+
 function keyDown(/** @type {KeyboardEvent} */ ev) {
     switch (ev.keyCode) {
         case 37: // левая стрелка (поворот корабля влево)
@@ -112,7 +117,8 @@ function keyUp(/** @type {KeyboardEvent} */ ev) {
 }
 
 function update() {
-    // рисуем космос
+    var exploding = ship.explodeTime > 0; //ноль означает,что корабль взрывается
+    //рисуем космос
     context.fillStyle = "black";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -122,49 +128,74 @@ function update() {
         ship.thrust.y -= SHIP_THRUST * Math.sin(ship.a) / FPS;
 
         //рисуем след от двигателя
-        context.fillStyle = "aqua";
-        context.strokeStyle = "blue";
-        context.lineWidth = SHIP_SIZE / 10;
-        context.beginPath();
-        context.moveTo( // левый край
-            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + 0.5 * Math.sin(ship.a)),
-            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - 0.5 * Math.cos(ship.a))
-        );
-        context.lineTo( // центр
-            ship.x - ship.r * 5 / 3 * Math.cos(ship.a),
-            ship.y + ship.r * 5 / 3 * Math.sin(ship.a)
-        );
-        context.lineTo( // правый край
-            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - 0.5 * Math.sin(ship.a)),
-            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + 0.5 * Math.cos(ship.a))
-        );
-        context.closePath();
-        context.fill();
-        context.stroke();
-
+        if (!exploding) {
+            context.fillStyle = "aqua";
+            context.strokeStyle = "blue";
+            context.lineWidth = SHIP_SIZE / 10;
+            context.beginPath();
+            context.moveTo( // левый край
+                ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + 0.5 * Math.sin(ship.a)),
+                ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - 0.5 * Math.cos(ship.a))
+            );
+            context.lineTo( // центр
+                ship.x - ship.r * 5 / 3 * Math.cos(ship.a),
+                ship.y + ship.r * 5 / 3 * Math.sin(ship.a)
+            );
+            context.lineTo( // правый край
+                ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - 0.5 * Math.sin(ship.a)),
+                ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + 0.5 * Math.cos(ship.a))
+            );
+            context.closePath();
+            context.fill();
+            context.stroke();
+        }
     } else {
         ship.thrust.x -= FRICTION * ship.thrust.x / FPS;
         ship.thrust.y -= FRICTION * ship.thrust.y / FPS;
     }
 
     // рисуем треугольный корабль
-    context.strokeStyle = "lime";
-    context.lineWidth = SHIP_SIZE / 20;
-    context.beginPath();
-    context.moveTo( // кончик корабля
-        ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
-        ship.y - 4 / 3 * ship.r * Math.sin(ship.a)
-    );
-    context.lineTo( // корма слева
-        ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),
-        ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
-    );
-    context.lineTo( // корма справа
-        ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),
-        ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
-    );
-    context.closePath();
-    context.stroke();
+    if (!exploding) {
+        context.strokeStyle = "lime";
+        context.lineWidth = SHIP_SIZE / 20;
+        context.beginPath();
+        context.moveTo( // кончик корабля
+            ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
+            ship.y - 4 / 3 * ship.r * Math.sin(ship.a)
+        );
+        context.lineTo( // корма слева
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),
+            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
+        );
+        context.lineTo( // корма справа
+            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),
+            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
+        );
+        context.closePath();
+        context.stroke();
+    } else {
+        //рисуем взрыв
+        context.fillStyle = "darkred";
+        context.beginPath();
+        context.arc(ship.x, ship.y, ship.r * 1.7, 0, Math.PI * 2, false);
+        context.fill();
+        context.fillStyle = "red";
+        context.beginPath();
+        context.arc(ship.x, ship.y, ship.r * 1.4, 0, Math.PI * 2, false);
+        context.fill();
+        context.fillStyle = "orange";
+        context.beginPath();
+        context.arc(ship.x, ship.y, ship.r * 1.1, 0, Math.PI * 2, false);
+        context.fill();
+        context.fillStyle = "yellow";
+        context.beginPath();
+        context.arc(ship.x, ship.y, ship.r * 0.8, 0, Math.PI * 2, false);
+        context.fill();
+        context.fillStyle = "white";
+        context.beginPath();
+        context.arc(ship.x, ship.y, ship.r * 0.5, 0, Math.PI * 2, false);
+        context.fill();
+    }
 
     if (SHOW_BOUNDING) {
         context.strokeStyle = "white";
@@ -217,20 +248,28 @@ function update() {
         context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
     }
 
-    // проверка на столкновения
-    for (var i = 0; i < asteroids.length; i++) {
-        if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < ship.r + asteroids[i].r) {
-            explodeShip();
+    if (!exploding) {
+        // проверка на столкновения
+        for (var i = 0; i < asteroids.length; i++) {
+            if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < ship.r + asteroids[i].r) {
+                explodeShip();
+            }
         }
+
+        // поворот корабля
+        ship.a += ship.rot;
+
+        // движение корабля
+        ship.x += ship.thrust.x;
+        ship.y += ship.thrust.y;
+    } else {
+        ship.explodeTime--;
+
+        if (ship.explodeTime == 0) {
+            ship = newShip()
+        }
+
     }
-
-    // поворот корабля
-    ship.a += ship.rot;
-
-    // движение корабля
-    ship.x += ship.thrust.x;
-    ship.y += ship.thrust.y;
-
     // соприкосновение с краем экрана
     if (ship.x < 0 - ship.r) {
         ship.x = canvas.width + ship.r;
