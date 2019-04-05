@@ -11,6 +11,8 @@ const TURN_SPEED = 360; // скорость поворота градусов в
 const SHOW_CENTER_DOT = false; // показать центральную точку
 const SHOW_BOUNDING = false; // показать ограничение столкновения
 const SHIP_EXPLODE_DURATION = 0.3; //длительность взрыва корабля в секундах
+const SHIP_INV_DURATION = 3; //длительность невидимости корабля в секундах
+const SHIP_BLINK_DURATION = 0.1; //длительность мигания невидимости корабля в секундах
 
 var canvas = document.getElementById("gameCanvas"); // ссылка на элемент по его ID
 var context = canvas.getContext("2d"); // контекст рисования на холсте
@@ -78,6 +80,8 @@ function newShip() {
         y: canvas.height / 2,
         r: SHIP_SIZE / 2,
         a: 90 / 180 * Math.PI, // конвертируем в радианы
+        blinkTime: Math.ceil(SHIP_BLINK_DURATION * FPS),
+        blinkNum: Math.ceil(SHIP_INV_DURATION / SHIP_BLINK_DURATION),
         explodeTime: 0,
         rot: 0,
         thrusting: false,
@@ -117,6 +121,7 @@ function keyUp(/** @type {KeyboardEvent} */ ev) {
 }
 
 function update() {
+    var blinkOn = ship.blinkNum % 2 == 0;
     var exploding = ship.explodeTime > 0; //ноль означает,что корабль взрывается
     //рисуем космос
     context.fillStyle = "black";
@@ -128,7 +133,7 @@ function update() {
         ship.thrust.y -= SHIP_THRUST * Math.sin(ship.a) / FPS;
 
         //рисуем след от двигателя
-        if (!exploding) {
+        if (!exploding && blinkOn) {
             context.fillStyle = "aqua";
             context.strokeStyle = "blue";
             context.lineWidth = SHIP_SIZE / 10;
@@ -156,23 +161,35 @@ function update() {
 
     // рисуем треугольный корабль
     if (!exploding) {
-        context.strokeStyle = "lime";
-        context.lineWidth = SHIP_SIZE / 20;
-        context.beginPath();
-        context.moveTo( // кончик корабля
-            ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
-            ship.y - 4 / 3 * ship.r * Math.sin(ship.a)
-        );
-        context.lineTo( // корма слева
-            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),
-            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
-        );
-        context.lineTo( // корма справа
-            ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),
-            ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
-        );
-        context.closePath();
-        context.stroke();
+        if (blinkOn) {
+            context.strokeStyle = "lime";
+            context.lineWidth = SHIP_SIZE / 20;
+            context.beginPath();
+            context.moveTo( // кончик корабля
+                ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
+                ship.y - 4 / 3 * ship.r * Math.sin(ship.a)
+            );
+            context.lineTo( // корма слева
+                ship.x - ship.r * (2 / 3 * Math.cos(ship.a) + Math.sin(ship.a)),
+                ship.y + ship.r * (2 / 3 * Math.sin(ship.a) - Math.cos(ship.a))
+            );
+            context.lineTo( // корма справа
+                ship.x - ship.r * (2 / 3 * Math.cos(ship.a) - Math.sin(ship.a)),
+                ship.y + ship.r * (2 / 3 * Math.sin(ship.a) + Math.cos(ship.a))
+            );
+            context.closePath();
+            context.stroke();
+        }
+        //моргание корабля
+        if (ship.blinkNum > 0) {
+            //уменьшение времени миганий
+            ship.blinkTime--;
+            //уменьшение количества миганий
+            if (ship.blinkTime == 0) {
+                ship.blinkTime = Math.ceil(SHIP_BLINK_DURATION * FPS);
+                ship.blinkNum--;
+            }
+        }
     } else {
         //рисуем взрыв
         context.fillStyle = "darkred";
@@ -249,13 +266,14 @@ function update() {
     }
 
     if (!exploding) {
-        // проверка на столкновения
-        for (var i = 0; i < asteroids.length; i++) {
-            if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < ship.r + asteroids[i].r) {
-                explodeShip();
+        if (ship.blinkNum == 0) {
+            // проверка на столкновения
+            for (var i = 0; i < asteroids.length; i++) {
+                if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < ship.r + asteroids[i].r) {
+                    explodeShip();
+                }
             }
         }
-
         // поворот корабля
         ship.a += ship.rot;
 
