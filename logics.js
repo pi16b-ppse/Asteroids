@@ -160,7 +160,8 @@ function shootLaser() {
             y: ship.y - 4 / 3 * ship.r * Math.sin(ship.a),
             xv: LASER_SPEED * Math.cos(ship.a) / FPS,
             yv: -LASER_SPEED * Math.sin(ship.a) / FPS,
-            dist: 0
+            dist: 0,
+            explodeTime: 0
         });
     }
     //предотвращение стрельбы
@@ -314,10 +315,26 @@ function update() {
 
     //рисуем лазеры
     for (var i = 0; i < ship.lasers.length; i++) {
-        context.fillStyle = "salmon";
-        context.beginPath();
-        context.arc(ship.lasers[i].x, ship.lasers[i].y, SHIP_SIZE / 15, 0, Math.PI * 2, false);
-        context.fill();
+        if (ship.lasers[i].explodeTime == 0) {
+            context.fillStyle = "salmon";
+            context.beginPath();
+            context.arc(ship.lasers[i].x, ship.lasers[i].y, SHIP_SIZE / 15, 0, Math.PI * 2, false);
+            context.fill();
+        } else {
+            //рисуем взрыв
+            context.fillStyle = "orangered";
+            context.beginPath();
+            context.arc(ship.lasers[i].x, ship.lasers[i].y, ship.r * 0.75, 0, Math.PI * 2, false);
+            context.fill();
+            context.fillStyle = "salmon";
+            context.beginPath();
+            context.arc(ship.lasers[i].x, ship.lasers[i].y, ship.r * 0.5, 0, Math.PI * 2, false);
+            context.fill();
+            context.fillStyle = "pink";
+            context.beginPath();
+            context.arc(ship.lasers[i].x, ship.lasers[i].y, ship.r * 0.25, 0, Math.PI * 2, false);
+            context.fill();
+        }
     }
 
     //обнаружение столкновения лазеров с астероидами
@@ -332,11 +349,11 @@ function update() {
             ly = ship.lasers[j].y;
 
             //обнаружение столкновения
-            if (distBetweenPoints(ax, ay, lx, ly) < ar) {
-                //удаление лазера
-                ship.lasers.splice(j, 1);
-                //удаление астероида
+            if (ship.lasers[j].explodeTime == 0 && distBetweenPoints(ax, ay, lx, ly) < ar) {
+
+                //разрушение астероида и активация взрыва лазера
                 destroyAsteroid(i);
+                ship.lasers[j].explodeTime = Math.ceil(LASER_EXPLODE_DURATION * FPS);
                 break;
             }
         }
@@ -388,12 +405,20 @@ function update() {
             continue;
         }
 
+        if (ship.lasers[i].explodeTime > 0) {
+            ship.lasers[i].explodeTime--;
+            //уничтожение лазера
+            if (ship.lasers[i].explodeTime == 0) {
+                ship.lasers[i].splice(i, 1);
+                continue;
+            }
+        } else {
+            ship.lasers[i].x += ship.lasers[i].xv;
+            ship.lasers[i].y += ship.lasers[i].yv;
 
-        ship.lasers[i].x += ship.lasers[i].xv;
-        ship.lasers[i].y += ship.lasers[i].yv;
-
-        //вычисление расстояния
-        ship.lasers[i].dist += Math.sqrt(Math.pow(ship.lasers[i].xv, 2) + Math.pow(ship.lasers[i].yv, 2));
+            //вычисление расстояния
+            ship.lasers[i].dist += Math.sqrt(Math.pow(ship.lasers[i].xv, 2) + Math.pow(ship.lasers[i].yv, 2));
+        }
 
         // соприкосновение с краем экрана
         if (ship.lasers[i].x < 0) {
