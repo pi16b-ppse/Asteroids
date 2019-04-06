@@ -1,4 +1,4 @@
-const FPS = 40; // кадров в секунду
+const FPS = 60; // кадров в секунду
 const FRICTION = 0.7; // коэффициент трения пространства
 const ASTEROIDS_NUM = 3; // стартовое количество астероидов
 const ASTEROIDS_JAG = 0.4; // острота астероидов
@@ -16,6 +16,7 @@ const SHIP_BLINK_DURATION = 0.1; //длительность мигания не�
 const LASER_MAX = 10; //максимальное количество лазеров на экране
 const LASER_SPEED = 500; //скорость лазеров в пикселях на секунду
 const LASER_DIST = 0.6; //максимальное растояние прохождение лазеров
+const LASER_EXPLODE_DURATION = 0.1; //длительность взрыва лазера в секундах
 
 
 var canvas = document.getElementById("gameCanvas"); // ссылка на элемент по его ID
@@ -45,8 +46,27 @@ function createAsteroids() {
             y = Math.floor(Math.random() * canvas.height);
             // буфферная зона
         } while (distBetweenPoints(ship.x, ship.y, x, y) < ASTEROIDS_SIZE * 2 + ship.r);
-        asteroids.push(newAsteroid(x, y))
+        asteroids.push(newAsteroid(x, y, Math.ceil(ASTEROIDS_SIZE / 2)));
     }
+}
+
+function destroyAsteroid(index) {
+    var x = asteroids[index].x;
+    var y = asteroids[index].y;
+    var r = asteroids[index].r;
+
+    //разделение астероида на 2 если необходимо
+    if (r == Math.ceil(ASTEROIDS_SIZE / 2)) {
+        asteroids.push(newAsteroid(x, y, Math.ceil(ASTEROIDS_SIZE / 4)));
+        asteroids.push(newAsteroid(x, y, Math.ceil(ASTEROIDS_SIZE / 4)));
+    } else if (r == Math.ceil(ASTEROIDS_SIZE / 4)) {
+        asteroids.push(newAsteroid(x, y, Math.ceil(ASTEROIDS_SIZE / 8)));
+        asteroids.push(newAsteroid(x, y, Math.ceil(ASTEROIDS_SIZE / 8)));
+    }
+
+    //уничтожение астероида
+    asteroids.splice(index, 1);
+
 }
 
 function distBetweenPoints(x1, y1, x2, y2) {
@@ -92,13 +112,13 @@ function keyUp(/** @type {KeyboardEvent} */ ev) {
 }
 
 // создание одного астероида
-function newAsteroid(x, y) {
+function newAsteroid(x, y, r) {
     var asteroid = {
         x: x,
         y: y,
         xV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
         yV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
-        r: ASTEROIDS_SIZE / 2,
+        r: r,
         explodeTime: 0,
         a: Math.random() * Math.PI * 2, // в радианах
         vertex: Math.floor(Math.random() * (ASTEROIDS_VERTEX + 1) + ASTEROIDS_VERTEX / 2),
@@ -316,7 +336,7 @@ function update() {
                 //удаление лазера
                 ship.lasers.splice(j, 1);
                 //удаление астероида
-                asteroids.splice(i, 1);
+                destroyAsteroid(i);
                 break;
             }
         }
@@ -328,6 +348,8 @@ function update() {
             for (var i = 0; i < asteroids.length; i++) {
                 if (distBetweenPoints(ship.x, ship.y, asteroids[i].x, asteroids[i].y) < ship.r + asteroids[i].r) {
                     explodeShip();
+                    destroyAsteroid(i);
+                    break;
                 }
             }
         }
