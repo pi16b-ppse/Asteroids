@@ -13,6 +13,10 @@ const SHOW_BOUNDING = false; // показать ограничение стол
 const SHIP_EXPLODE_DURATION = 0.3; //длительность взрыва корабля в секундах
 const SHIP_INV_DURATION = 3; //длительность невидимости корабля в секундах
 const SHIP_BLINK_DURATION = 0.1; //длительность мигания невидимости корабля в секундах
+const LASER_MAX = 10; //максимальное количество лазеров на экране
+const LASER_SPEED = 500; //скорость лазеров в пикселях на секунду
+const LASER_DIST = 0.6; //максимальное растояние прохождение лазеров
+
 
 var canvas = document.getElementById("gameCanvas"); // ссылка на элемент по его ID
 var context = canvas.getContext("2d"); // контекст рисования на холсте
@@ -53,6 +57,40 @@ function explodeShip() {
     ship.explodeTime = Math.ceil(FPS * SHIP_EXPLODE_DURATION);
 }
 
+function keyDown(/** @type {KeyboardEvent} */ ev) {
+    switch (ev.keyCode) {
+        case 32: // пробел (выстрел корабля)
+            shootLaser();
+            break;
+        case 37: // левая стрелка (поворот корабля влево)
+            ship.rot = TURN_SPEED / 180 * Math.PI / FPS;
+            break;
+        case 38: // стрелка вверх (движение вперед)
+            ship.thrusting = true;
+            break;
+        case 39: // правая стрелка (поворот корабля вправо)
+            ship.rot = -TURN_SPEED / 180 * Math.PI / FPS;
+            break;
+    }
+}
+
+function keyUp(/** @type {KeyboardEvent} */ ev) {
+    switch (ev.keyCode) {
+        case 32: // пробел (ещё один выстрел корабля)
+            ship.canShoot = true;
+            break;
+        case 37: // левая стрелка (остановка поворота корабля влево)
+            ship.rot = 0;
+            break;
+        case 38: // стрелка вверх (остановка движения вперед)
+            ship.thrusting = false;
+            break;
+        case 39: // правая стрелка (остановка поворота корабля вправо)
+            ship.rot = 0;
+            break;
+    }
+}
+
 // создание одного астероида
 function newAsteroid(x, y) {
     var asteroid = {
@@ -82,7 +120,9 @@ function newShip() {
         a: 90 / 180 * Math.PI, // конвертируем в радианы
         blinkTime: Math.ceil(SHIP_BLINK_DURATION * FPS),
         blinkNum: Math.ceil(SHIP_INV_DURATION / SHIP_BLINK_DURATION),
+        canShoot: true,
         explodeTime: 0,
+        lasers: [],
         rot: 0,
         thrusting: false,
         thrust: {
@@ -92,32 +132,19 @@ function newShip() {
     }
 }
 
-function keyDown(/** @type {KeyboardEvent} */ ev) {
-    switch (ev.keyCode) {
-        case 37: // левая стрелка (поворот корабля влево)
-            ship.rot = TURN_SPEED / 180 * Math.PI / FPS;
-            break;
-        case 38: // стрелка вверх (движение вперед)
-            ship.thrusting = true;
-            break;
-        case 39: // правая стрелка (поворот корабля вправо)
-            ship.rot = -TURN_SPEED / 180 * Math.PI / FPS;
-            break;
+function shootLaser() {
+    //создание лазера
+    if (ship.canShoot && ship.lasers.length < LASER_MAX) {
+        ship.lasers.push({ //выстрел из коничка корабля
+            x: ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
+            y: ship.y - 4 / 3 * ship.r * Math.sin(ship.a),
+            xv: LASER_SPEED * Math.cos(ship.a) / FPS,
+            yv: -LASER_SPEED * Math.sin(ship.a) / FPS,
+            dist: 0
+        });
     }
-}
-
-function keyUp(/** @type {KeyboardEvent} */ ev) {
-    switch (ev.keyCode) {
-        case 37: // левая стрелка (остановка поворота корабля влево)
-            ship.rot = 0;
-            break;
-        case 38: // стрелка вверх (остановка движения вперед)
-            ship.thrusting = false;
-            break;
-        case 39: // правая стрелка (остановка поворота корабля вправо)
-            ship.rot = 0;
-            break;
-    }
+    //предотвращение стрельбы
+    ship.canShoot = false;
 }
 
 function update() {
@@ -265,6 +292,36 @@ function update() {
         context.fillRect(ship.x - 1, ship.y - 1, 2, 2);
     }
 
+    //рисуем лазеры
+    for (var i = 0; i < ship.lasers.length; i++) {
+        context.fillStyle = "salmon";
+        context.beginPath();
+        context.arc(ship.lasers[i].x, ship.lasers[i].y, SHIP_SIZE / 15, 0, Math.PI * 2, false);
+        context.fill();
+    }
+
+    //обнаружение столкновения лазеров с астероидами
+    var ax, ay, ar, lx, ly;
+    for (var i = asteroids.length - 1; i >= 0; i--) {
+        ax = asteroids[i].x;
+        ay = asteroids[i].y;
+        ar = asteroids[i].r;
+
+        for (var j = ship.lasers.length - 1; j >= 0; j--) {
+            lx = ship.lasers[j].x;
+            ly = ship.lasers[j].y;
+
+            //обнаружение столкновения
+            if (distBetweenPoints(ax, ay, lx, ly) < ar) {
+                //удаление лазера
+                ship.lasers.splice(j, 1);
+                //удаление астероида
+                asteroids.splice(i, 1);
+                break;
+            }
+        }
+    }
+
     if (!exploding) {
         if (ship.blinkNum == 0) {
             // проверка на столкновения
@@ -299,6 +356,34 @@ function update() {
         ship.y = canvas.height + ship.r;
     } else if (ship.y > canvas.height + ship.r) {
         ship.y = 0 + ship.r;
+    }
+
+    //движение лазера
+    for (var i = ship.lasers.length - 1; i >= 0; i--) {
+        //проверка расстояния
+        if (ship.lasers[i].dist > LASER_DIST * canvas.width) {
+            ship.lasers.splice(i, 1);
+            continue;
+        }
+
+
+        ship.lasers[i].x += ship.lasers[i].xv;
+        ship.lasers[i].y += ship.lasers[i].yv;
+
+        //вычисление расстояния
+        ship.lasers[i].dist += Math.sqrt(Math.pow(ship.lasers[i].xv, 2) + Math.pow(ship.lasers[i].yv, 2));
+
+        // соприкосновение с краем экрана
+        if (ship.lasers[i].x < 0) {
+            ship.lasers[i].x = canvas.width;
+        } else if (ship.lasers[i].x > canvas.width) {
+            ship.lasers[i].x = 0;
+        }
+        if (ship.lasers[i].y < 0) {
+            ship.lasers[i].y = canvas.height;
+        } else if (ship.lasers[i].y > canvas.height) {
+            ship.lasers[i].y = 0;
+        }
     }
 
     // вынес движени астероидов для дальнейшего развития столкновения
