@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://docbook.org/xml/5.1/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://docbook.org/xml/5.1/sch/docbook.sch" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<article xmlns="http://docbook.org/ns/docbook"
+    xmlns:xlink="http://www.w3.org/1999/xlink" version="5.1">
+    <info>
+        <title>Документация к проекту Asteroids</title>
+        <author>
+            <orgname>Николай Бездетный</orgname>
+            
+        </author>
+    </info>
+    
+    <section>
+        <title>Документация</title>
+        <section>
+            <title>Немного о проекте</title>
+        <para>Астероиды — это не просто классическая, или ретро игра, — это прародитель космических 
+                стрелялок. Игра Asteroids выпущена в 1979 году для Atari и была самой продаваемой 
+                игрой своей эпохи.
+        </para>
+        <para>Игра доступна онлайн по данной <link xlink:href="https://azonos712.github.io/index.html">
+            ссылке</link>.</para>
+        </section>
+    </section>
+    <section>
+        
+        <title>Описание игры</title>
+ 
+    <section>
+            <title>Об игре</title>
+            <para>Asteroids (рус. Астероиды) — игра на аркадных автоматах, выпущенная Atari в 1979 году.
+                Стала одной из самых известных игр золотого века аркадных игр. 
+            </para>
+    </section>
+    <section>
+        <title>Принцип игры</title>
+        <para>Цель игры состоит в том, чтобы получить как можно больше очков, расстреливая 
+            астероиды или летающие тарелки и избегая при этом столкновения с обломками. 
+            Игрок управляет космическим кораблём в форме стрелки, которая может крутиться 
+            влево и вправо, а также двигаться и стрелять, но только вперёд. При движении 
+            импульс не сохраняется: если не включать двигатель, то корабль постепенно остановится.
+            
+            Каждый уровень начинается с появления нескольких астероидов, 
+            дрейфующих в случайных точках экрана. Края экрана завёрнуты друг к другу, 
+            например астероид, уходящий за верхний край экрана, появляется на нижнем и 
+            продолжает двигаться в том же направлении. Когда игрок попадает в астероид, 
+            он разбивается на обломки, которые меньше, но двигаются быстрее.
+        </para>
+    </section>
+    </section>
+    <section>
+        <title>Иллюстрации</title>
+        <orderedlist>
+            <listitem>
+                <para>
+                    <emphasis>Старт</emphasis>
+                </para>
+                <para>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata align="center" scale="100" fileref="images/1.png"/>
+                        </imageobject>
+                    </mediaobject>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>Игровой процесс</emphasis>
+                </para>
+                <para>
+                    <mediaobject>
+                        <imageobject>
+                            <imagedata align="center" scale="100" fileref="images/2.png"/>
+                        </imageobject>
+                    </mediaobject>
+                </para>
+            </listitem>
+        </orderedlist>
+    </section>
+    
+    <section>
+        <title>Детали реализации</title>
+        <para>Особенности реализации отдельного функционала представлены ниже:</para>
+        <section>
+            <title>Создание нового корабля</title>
+            <para>Данная функция вызывается при старте и каждый раз при крушении корабля. 
+                В ней происходит присвоение координат, угла, мерцаний и т.п.</para>
+            <programlisting>
+                <![CDATA[
+    function newShip() {
+        return {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            r: SHIP_SIZE / 2,
+            a: 90 / 180 * Math.PI,
+            blinkTime: Math.ceil(SHIP_BLINK_DURATION * FPS),
+            blinkNum: Math.ceil(SHIP_INV_DURATION / SHIP_BLINK_DURATION),
+            canShoot: true,
+            explodeTime: 0,
+            lasers: [],
+            rot: 0,
+            thrusting: false,
+            thrust: {
+                x: 0,
+                y: 0
+            }
+        }
+    }
+                ]]>
+            </programlisting>
+        </section>
+
+    
+    <section>
+            <title>Создание нового астероида</title>
+            <para>Функция вызывается при инициализации массива из стартовых астероидов и 
+                каждый раз, когда происходит уничтожение астероида,при этом начинается 
+                деление на два более мелких астероида. Стартовые астероиды появляются и не попадают 
+                в буфферную зону корабля, поэтому при старте корабль в безопасности</para>
+            <programlisting>
+                <![CDATA[
+    function newAsteroid(x, y, r) {
+        var asteroid = {
+            x: x,
+            y: y,
+            xV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
+            yV: Math.random() * ASTEROIDS_SPEED / FPS * (Math.random() < 0.5 ? 1 : -1),
+            r: r,
+            explodeTime: 0,
+            a: Math.random() * Math.PI * 2,
+            vertex: Math.floor(Math.random() * (ASTEROIDS_VERTEX + 1) + ASTEROIDS_VERTEX / 2),
+            offset: []
+        };
+        for (var i = 0; i < asteroid.vertex; i++) {
+            asteroid.offset.push(Math.random() * ASTEROIDS_JAG * 2 + 1 - ASTEROIDS_JAG);
+        }
+        return asteroid;
+    }
+                ]]>
+            </programlisting>
+        
+    </section>
+    
+    <section>
+            <title>Создание нового лазера</title>
+            <para>Функция вызывается каждый раз, когда пользователь нажимает на кнопку
+                стрельбы. Количество лазеров на экране ограниченно</para>
+            <programlisting>
+                <![CDATA[
+    function shootLaser() {
+        if (ship.canShoot && ship.lasers.length < LASER_MAX) {
+            ship.lasers.push({
+                x: ship.x + 4 / 3 * ship.r * Math.cos(ship.a),
+                y: ship.y - 4 / 3 * ship.r * Math.sin(ship.a),
+                xv: LASER_SPEED * Math.cos(ship.a) / FPS,
+                yv: -LASER_SPEED * Math.sin(ship.a) / FPS,
+                dist: 0,
+                explodeTime: 0
+            });
+        }
+        ship.canShoot = false;
+    }
+                ]]>
+            </programlisting>
+        
+    </section>
+    </section>
+</article>
